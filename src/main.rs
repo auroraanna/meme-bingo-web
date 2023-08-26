@@ -156,7 +156,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(new)
             .service(edit)
-            .service(Files::new("/style", "style").show_files_listing())
+            .service(Files::new("/static", "static"))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
