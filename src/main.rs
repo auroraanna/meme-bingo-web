@@ -188,6 +188,18 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
         .body(body)
 }
 
+fn port() -> u16 {
+    let name = "MEME_BINGO_PORT";
+    let port = env::var(name);
+    match port {
+        Ok(v) => match v.parse::<u16>() {
+            Ok(parsed_v) => return  parsed_v,
+            Err(_) => panic!("Error parsing environment variable as u16"),
+        },
+        Err(e) => panic!("${} is not set ({})", name, e),
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mut hbars = Handlebars::new();
@@ -205,7 +217,7 @@ async fn main() -> std::io::Result<()> {
             .service(edit)
             .service(Files::new("/static", "static"))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", port()))?
     .run()
     .await
 }
