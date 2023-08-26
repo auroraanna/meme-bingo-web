@@ -2,6 +2,9 @@
 <html lang="en">
 	<head>
 		<title>Meme bingo</title>
+		<meta
+  		http-equiv="Content-Security-Policy"
+  		content="default-src 'none'; style-src 'self' 'nonce-{{nonce}}'; img-src 'self';" />
 		<link rel="icon" href="/static/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" href="/static/global.css" type="text/css" />
@@ -14,7 +17,8 @@
 			</nav>
 		</header>
 		<main>
-			<h1 style="--fruit: '{{fruit}}'">{{action}}</h1>
+			<style nonce="{{nonce}}">h1 {--fruit: '{{fruit}}';}</style>
+			<h1>{{action}}</h1>
 			{{{body}}}
 		</main>
 	</body>

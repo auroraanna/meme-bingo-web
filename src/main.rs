@@ -3,7 +3,10 @@ use actix_web_lab::extract::Query;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http::header::ContentType;
 use actix_web::middleware::Compress;
+use base64::{Engine as _, engine::general_purpose};
 use handlebars::Handlebars;
+use rand::RngCore;
+use rand::rngs::OsRng;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -14,10 +17,12 @@ struct BingoField {
     range: u8,
 }
 
+// For inserting data into the edit template
 #[derive(Deserialize, Serialize, Debug, Clone)]
 struct BingoGrid {
     size: u8,
     fields: Vec<BingoField>,
+    nonce: String,
 }
 
 // BingoGrid but works with query parameters
@@ -28,6 +33,13 @@ struct QBingoGrid {
     names: Option<Vec<String>>,
     #[serde(rename = "range")]
     ranges: Option<Vec<u8>>,
+}
+
+fn nonce() -> String {
+    let mut rng = OsRng::default();
+    let mut nonce = [0u8; 16];
+    rng.fill_bytes(&mut nonce);
+    general_purpose::STANDARD.encode(&nonce)
 }
 
 fn fruit() -> String {
@@ -58,6 +70,8 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     data.insert("body", &index);
     let fruit = fruit();
     data.insert("fruit", &fruit);
+    let nonce = nonce();
+    data.insert("nonce", &nonce);
     let body = hb.render("base", &data).unwrap();
 
     HttpResponse::Ok()
@@ -73,6 +87,8 @@ async fn new(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     data.insert("body", &new);
     let fruit = fruit();
     data.insert("fruit", &fruit);
+    let nonce = nonce();
+    data.insert("nonce", &nonce);
     let body = hb.render("base", &data).unwrap();
 
     HttpResponse::Ok()
@@ -123,15 +139,19 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
     }
     dbg!(&fields);
 
-    let edit = hb.render("edit", &BingoGrid {
+    let nonce = nonce();
+    let edit_data = BingoGrid {
         size: bingo.size,
         fields: fields,
-    }).unwrap();
+        nonce: nonce.clone(),
+    };
+    let edit = hb.render("edit", &edit_data).unwrap();
 
     let fruit = fruit();
     let mut base_data = BTreeMap::new();
     base_data.insert("action", "Edit bingo");
     base_data.insert("body", &edit);
+    base_data.insert("nonce", &nonce);
     
     base_data.insert("fruit", &fruit);
     let body = hb.render("base", &base_data).unwrap();

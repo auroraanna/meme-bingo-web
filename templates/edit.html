@@ -1,8 +1,8 @@
 <form action="/edit" method="get">
 	<input type="number" id="size" name="size" value="{{size}}" min="2" max="15" required hidden>
 
-	<div id="bingo-grid"
-		style="grid-template-columns: repeat({{size}}, 1fr);">
+	<style nonce="{{nonce}}">#bingo-grid {grid-template-columns: repeat({{size}}, 1fr);}</style>
+	<div id="bingo-grid">
 		{{#each fields}}
 			<div>
 				<input aria-label="Field {{@index}} name" type="text" id="field{{@index}}-name" name="name" value="{{name}}" />
