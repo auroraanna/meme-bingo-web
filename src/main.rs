@@ -1,7 +1,7 @@
 use actix_files::Files;
 use actix_web_lab::extract::Query;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
-use actix_web::http::header::ContentType;
+use actix_web::http::header::{ContentType, TryIntoHeaderPair};
 use actix_web::middleware::Compress;
 use base64::{Engine as _, engine::general_purpose};
 use handlebars::Handlebars;
@@ -10,6 +10,7 @@ use rand::rngs::OsRng;
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
+use std::env;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 struct BingoField {
@@ -23,6 +24,7 @@ struct BingoGrid {
     size: u8,
     fields: Vec<BingoField>,
     nonce: String,
+    base: String,
 }
 
 // BingoGrid but works with query parameters
@@ -33,6 +35,14 @@ struct QBingoGrid {
     names: Option<Vec<String>>,
     #[serde(rename = "range")]
     ranges: Option<Vec<u8>>,
+}
+
+fn base() -> String {
+    let name = "MEME_BINGO_BASE";
+    match env::var(name) {
+        Ok(v) => return v,
+        Err(e) => panic!("${} is not set ({})", name, e),
+    }
 }
 
 fn nonce() -> String {
@@ -62,6 +72,13 @@ fn fruit() -> String {
     fruit
 }
 
+fn csp(nonce: String) -> impl TryIntoHeaderPair {
+    (
+        "Content-Security-Policy",
+        format!("default-src 'none'; style-src 'self' 'nonce-{}'; img-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors *;", nonce),
+    )
+}
+
 #[get("/")]
 async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     let mut data = BTreeMap::new();
@@ -72,9 +89,12 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     data.insert("fruit", &fruit);
     let nonce = nonce();
     data.insert("nonce", &nonce);
+    let base = base();
+    data.insert("base", &base);
     let body = hb.render("base", &data).unwrap();
 
     HttpResponse::Ok()
+        .insert_header(csp(nonce))
         .content_type(ContentType::html())
         .body(body)
 }
@@ -89,9 +109,12 @@ async fn new(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     data.insert("fruit", &fruit);
     let nonce = nonce();
     data.insert("nonce", &nonce);
+    let base = base();
+    data.insert("base", &base);
     let body = hb.render("base", &data).unwrap();
 
     HttpResponse::Ok()
+        .insert_header(csp(nonce))
         .content_type(ContentType::html())
         .body(body)
 }
@@ -140,10 +163,12 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
     dbg!(&fields);
 
     let nonce = nonce();
+    let base = base();
     let edit_data = BingoGrid {
         size: bingo.size,
         fields: fields,
         nonce: nonce.clone(),
+        base: base.clone(),
     };
     let edit = hb.render("edit", &edit_data).unwrap();
 
@@ -152,11 +177,13 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
     base_data.insert("action", "Edit bingo");
     base_data.insert("body", &edit);
     base_data.insert("nonce", &nonce);
+    base_data.insert("base", &base);
     
     base_data.insert("fruit", &fruit);
     let body = hb.render("base", &base_data).unwrap();
 
     HttpResponse::Ok()
+        .insert_header(csp(nonce))
         .content_type(ContentType::html())
         .body(body)
 }
