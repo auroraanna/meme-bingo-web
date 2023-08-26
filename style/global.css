@@ -1,0 +1,33 @@
+:root {
+	font-family: system-ui;
+	overflow: scroll;
+}
+
+#bingo-grid {
+	display: grid;
+	gap: 0.5rem;
+	width: min-content;
+	overflow: scroll;
+}
+
+#bingo-grid > div {
+	border-style: solid;
+	border-width: 1pt;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	width: 70px;
+	height: 70px;
+}
+
+#bingo-grid > div > input[type=text] {
+	flex: 1;
+}
+
+#bingo-grid > div > input[type=checkbox] {
+	height: 2rem;
+}
+
+h1::before {
+	content: var(--fruit);
+}
