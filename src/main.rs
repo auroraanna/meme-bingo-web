@@ -72,6 +72,13 @@ fn fruit() -> String {
     fruit
 }
 
+fn pp() -> impl TryIntoHeaderPair {
+    (
+        "Permissions-Policy",
+        "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), interest-cohort=(), serial=(), sync-script=(), trust-token-redemption=(), unload=(), window-placement=(), vertical-scroll=()",
+    )
+}
+
 fn csp(nonce: String) -> impl TryIntoHeaderPair {
     (
         "Content-Security-Policy",
@@ -94,6 +101,7 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     let body = hb.render("base", &data).unwrap();
 
     HttpResponse::Ok()
+        .insert_header(pp())
         .insert_header(csp(nonce))
         .content_type(ContentType::html())
         .body(body)
@@ -114,6 +122,7 @@ async fn new(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     let body = hb.render("base", &data).unwrap();
 
     HttpResponse::Ok()
+        .insert_header(pp())
         .insert_header(csp(nonce))
         .content_type(ContentType::html())
         .body(body)
@@ -183,6 +192,7 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
     let body = hb.render("base", &base_data).unwrap();
 
     HttpResponse::Ok()
+        .insert_header(pp())
         .insert_header(csp(nonce))
         .content_type(ContentType::html())
         .body(body)
