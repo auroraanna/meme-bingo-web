@@ -200,11 +200,43 @@ fn port() -> u16 {
     }
 }
 
+fn templ_dir() -> String {
+    let fallback_templ_dir = String::from("./templates");
+    let name = "MEME_BINGO_TEMPLATES";
+    let templ_dir = env::var(name);
+    match templ_dir {
+        Ok(v) => match v.parse::<String>() {
+            Ok(parsed_v) => return  parsed_v,
+            Err(_) => panic!("Error parsing environment variable as String"),
+        },
+        Err(_) => {
+            eprintln!("${} is not set, using {}", name, fallback_templ_dir);
+            return fallback_templ_dir;
+        }
+    }
+}
+
+fn static_dir() -> String {
+    let fallback_static_dir = String::from("./static");
+    let name = "MEME_BINGO_STATIC";
+    let static_dir = env::var(name);
+    match static_dir {
+        Ok(v) => match v.parse::<String>() {
+            Ok(parsed_v) => return  parsed_v,
+            Err(_) => panic!("Error parsing environment variable as String"),
+        },
+        Err(_) => {
+            eprintln!("${} is not set, using {}", name, fallback_static_dir);
+            return fallback_static_dir;
+        }
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let mut hbars = Handlebars::new();
     hbars
-        .register_templates_directory(".html", "./templates/")
+        .register_templates_directory(".html", templ_dir())
         .unwrap();
     let hbars_ref = web::Data::new(hbars);
 
@@ -215,7 +247,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(new)
             .service(edit)
-            .service(Files::new("/static", "static"))
+            .service(Files::new("/static", static_dir()))
     })
     .bind(("127.0.0.1", port()))?
     .run()
