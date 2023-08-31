@@ -1,10 +1,44 @@
 :root {
 	font-family: system-ui;
+	color-scheme: light dark;
+	--bg-color: whitesmoke;
+	--color: black;
+	--border-color: dimgrey;
+	--brown: hsl(32, 71%, 27%);
+	--button-bg-color: yellow;
+	--button-color: var(--brown);
+	background-color: var(--bg-color);
+	color: var(--color);
+
 }
 
 button, input, textarea {
 	min-width: 48px;
-	min-height: 48px;
+	min-height: 48px;	
+}
+
+button {
+	background-color: var(--button-bg-color);
+	color: var(--button-color);
+	border-style: solid;
+	border-width: 2pt;
+	border-radius: 3pt;
+	border-color: var(--button-color);
+	font-size: large;
+}
+
+button:active {
+	background-color: var(--button-color);
+	color: var(--button-bg-color);
+}
+
+a:active {
+	--red: hsl(0, 100%, 33%);
+	color: var(--red);
+	border-style: dashed;
+	border-width: 2pt;
+	border-color: var(--red);
+	padding: 1pt;
 }
 
 .horizontal-scroller {
@@ -24,12 +58,13 @@ button, input, textarea {
 #bingo-grid > div {
 	border-style: solid;
 	border-width: 2pt;
+	border-color: var(--border-color);
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	width: 7.8rem;
 	height: 7.8rem;
-	padding: 2pt;
+	padding: 3pt;
 }
 
 #bingo-grid > div > textarea {
@@ -38,6 +73,51 @@ button, input, textarea {
 	font-size: large;
 }
 
+input[type=number] {
+	font-size: large;
+	max-height: 48px;
+}
+
 h1::before {
 	content: var(--fruit);
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--bg-color: white;
+		--color: black;
+		--border-color: black;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg-color: #212121;
+		--color: whitesmoke;
+		--border-color: hsl(0, 0%, 75%);
+		--button-bg-color: var(--brown);
+		--button-color: yellow;
+	}
+
+	a {
+		color: yellow;
+	}
+
+	a:visited {
+		color: goldenrod;
+	}
+
+	a:active{
+		--ponk: hsl(300, 100%, 73%);
+		color: var(--ponk);
+		border-color: var(--ponk);
+	}
+
+	@media (prefers-contrast: more) {
+		:root {
+			--bg-color: black;
+			--color: white;
+			--border-color: white;
+		}
+	}
 }
