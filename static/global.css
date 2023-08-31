@@ -1,31 +1,41 @@
 :root {
 	font-family: system-ui;
-	overflow: scroll;
+}
+
+button, input, textarea {
+	min-width: 48px;
+	min-height: 48px;
+}
+
+.horizontal-scroller {
+	width: 100%;
+	overflow-x: auto;
+	margin-block-start: 1em;
+	margin-block-end: 1em;
 }
 
 #bingo-grid {
 	display: grid;
-	gap: 0.5rem;
+	grid-gap: 7pt;
 	width: min-content;
-	overflow: scroll;
+	height: min-content;
 }
 
 #bingo-grid > div {
 	border-style: solid;
-	border-width: 1pt;
+	border-width: 2pt;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	width: 70px;
-	height: 70px;
+	width: 7.8rem;
+	height: 7.8rem;
+	padding: 2pt;
 }
 
-#bingo-grid > div > input[type=text] {
+#bingo-grid > div > textarea {
+	resize: none;
 	flex: 1;
-}
-
-#bingo-grid > div > input[type=checkbox] {
-	height: 2rem;
+	font-size: large;
 }
 
 h1::before {

@@ -2,13 +2,15 @@
 	<input type="number" id="size" name="size" value="{{size}}" min="2" max="15" required hidden>
 
 	<style nonce="{{nonce}}">#bingo-grid {grid-template-columns: repeat({{size}}, 1fr);}</style>
-	<div id="bingo-grid">
-		{{#each fields}}
-			<div>
-				<input aria-label="Field {{@index}} name" type="text" id="field{{@index}}-name" name="name" value="{{name}}" />
-				<input aria-label="How much field {{@index}} applies" type="range" id="field{{@index}}-range" name="range" min="0" max="9" value="{{range}}" />
-			</div>
-		{{/each}}
+	<div class="horizontal-scroller">
+		<div id="bingo-grid">
+			{{#each fields}}
+				<div>
+					<textarea aria-label="Field {{@index}} name" id="field{{@index}}-name" name="name">{{name}}</textarea>
+					<input aria-label="How much field {{@index}} applies" type="range" id="field{{@index}}-range" name="range" min="0" max="9" value="{{range}}" />
+				</div>
+			{{/each}}
+		</div>
 	</div>
 
 	<button type="submit">Update address</button>
