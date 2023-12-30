@@ -80,7 +80,7 @@ fn pp() -> impl TryIntoHeaderPair {
     )
 }
 
-fn csp(nonce: String) -> impl TryIntoHeaderPair {
+fn csp(nonce: &str) -> impl TryIntoHeaderPair {
     (
         "Content-Security-Policy",
         format!("default-src 'none'; style-src 'self' 'nonce-{}'; img-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors *; sandbox allow-same-origin;", nonce),
@@ -103,7 +103,7 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
 
     HttpResponse::Ok()
         .insert_header(pp())
-        .insert_header(csp(nonce))
+        .insert_header(csp(&nonce))
         .content_type(ContentType::html())
         .body(body)
 }
@@ -124,7 +124,7 @@ async fn new(hb: web::Data<Handlebars<'_>>) -> impl Responder {
 
     HttpResponse::Ok()
         .insert_header(pp())
-        .insert_header(csp(nonce))
+        .insert_header(csp(&nonce))
         .content_type(ContentType::html())
         .body(body)
 }
@@ -194,7 +194,7 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
 
     HttpResponse::Ok()
         .insert_header(pp())
-        .insert_header(csp(nonce))
+        .insert_header(csp(&nonce))
         .content_type(ContentType::html())
         .body(body)
 }
