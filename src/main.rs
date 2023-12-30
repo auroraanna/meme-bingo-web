@@ -257,7 +257,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(new)
             .service(edit)
-            .service(Files::new("/static", static_dir()))
+            .service(Files::new("/", static_dir()))
     })
     .bind(("127.0.0.1", port()))?
     .run()
