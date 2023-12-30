@@ -7,7 +7,7 @@ use base64::{Engine as _, engine::general_purpose};
 use handlebars::Handlebars;
 use rand::RngCore;
 use rand::rngs::OsRng;
-use rand::seq::SliceRandom;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::env;
@@ -52,24 +52,25 @@ fn nonce() -> String {
     general_purpose::STANDARD.encode(&nonce)
 }
 
-fn fruit() -> String {
+fn fruit() -> char {
     let fruits = [
-        "🍊",
-        "🍋",
-        "🍌",
-        "🍍",
-        "🥭",
-        "🍎",
-        "🍏",
-        "🍐",
-        "🍑",
-        "🍒",
-        "🍓",
-        "🥝",
-        "🌽",
+        '🍊',
+        '🍋',
+        '🍌',
+        '🍍',
+        '🥭',
+        '🍎',
+        '🍏',
+        '🍐',
+        '🍑',
+        '🍒',
+        '🍓',
+        '🥝',
+        '🌽',
     ];
-    let fruit = fruits.choose(&mut rand::thread_rng()).expect(fruits[0]).to_string();
-    fruit
+    let mut rng = rand::thread_rng();
+    let random_index: usize = rng.gen_range(0..fruits.len());
+    fruits[random_index]
 }
 
 fn pp() -> impl TryIntoHeaderPair {
@@ -92,7 +93,7 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     data.insert("action", "About");
     let index = hb.render("index", &false).unwrap();
     data.insert("body", &index);
-    let fruit = fruit();
+    let fruit = fruit().to_string();
     data.insert("fruit", &fruit);
     let nonce = nonce();
     data.insert("nonce", &nonce);
@@ -113,7 +114,7 @@ async fn new(hb: web::Data<Handlebars<'_>>) -> impl Responder {
     data.insert("action", "New bingo");
     let new = hb.render("new", &false).unwrap();
     data.insert("body", &new);
-    let fruit = fruit();
+    let fruit = fruit().to_string();
     data.insert("fruit", &fruit);
     let nonce = nonce();
     data.insert("nonce", &nonce);
@@ -181,7 +182,7 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
     };
     let edit = hb.render("edit", &edit_data).unwrap();
 
-    let fruit = fruit();
+    let fruit = fruit().to_string();
     let mut base_data = BTreeMap::new();
     base_data.insert("action", "Edit bingo");
     base_data.insert("body", &edit);
