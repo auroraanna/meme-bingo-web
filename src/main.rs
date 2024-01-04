@@ -245,6 +245,8 @@ fn static_dir() -> String {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let static_dir = static_dir();
+
     let mut hbars = Handlebars::new();
     hbars
         .register_templates_directory(".html", templ_dir())
@@ -258,7 +260,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(new)
             .service(edit)
-            .service(Files::new("/", static_dir()))
+            .service(Files::new("/", &static_dir))
     })
     .bind(("127.0.0.1", port()))?
     .run()
