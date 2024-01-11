@@ -82,7 +82,7 @@ fn pp() -> impl TryIntoHeaderPair {
 fn csp(nonce: &str) -> impl TryIntoHeaderPair {
     (
         "Content-Security-Policy",
-        format!("default-src 'none'; style-src 'self' 'nonce-{}'; img-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors *; sandbox allow-same-origin;", nonce),
+        format!("default-src 'none'; style-src 'self' 'nonce-{}'; img-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors *; sandbox allow-same-origin allow-forms;", nonce),
     )
 }
 
