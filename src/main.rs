@@ -22,8 +22,6 @@ struct BingoField {
 struct BingoGrid {
     size: u8,
     fields: Vec<BingoField>,
-    nonce: String,
-    base: String,
 }
 
 // BingoGrid but works with query parameters
@@ -173,22 +171,22 @@ async fn edit(tera: web::Data<Tera>, bingo: Query<QBingoGrid>) -> impl Responder
 
     let nonce = nonce();
     let base = base();
-    let edit_context = BingoGrid {
+
+    let mut edit_context = Context::new();
+    edit_context.insert("bingo", &BingoGrid {
         size: bingo.size,
         fields: fields,
-        nonce: nonce.clone(),
-        base: base.clone(),
-    };
-    let edit = tera.render("edit.html", &Context::from_serialize(&edit_context).unwrap()).unwrap();
+    });
+    edit_context.insert("nonce", &nonce);
+    edit_context.insert("base", &base);
+    let edit = tera.render("edit.html", &edit_context).unwrap();
 
-    let fruit = fruit().to_string();
     let mut base_context = Context::new();
     base_context.insert("action", "Edit bingo");
     base_context.insert("body", &edit);
     base_context.insert("nonce", &nonce);
     base_context.insert("base", &base);
-    
-    base_context.insert("fruit", &fruit);
+    base_context.insert("fruit", &(fruit().to_string()));
     let body = tera.render("base.html", &base_context).unwrap();
 
     HttpResponse::Ok()
