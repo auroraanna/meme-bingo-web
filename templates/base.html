@@ -14,9 +14,9 @@
 			</nav>
 		</header>
 		<main>
-			<style nonce="{{nonce}}">h1 {--fruit: '{{fruit}}';}</style>
-			<h1>{{action}}</h1>
-			{{{body}}}
+			<style nonce="{{ nonce }}">h1 {--fruit: '{{ fruit }}';}</style>
+			<h1>{{ action }}</h1>
+			{{ body | safe }}
 		</main>
 	</body>
 </html>

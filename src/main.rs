@@ -4,12 +4,11 @@ use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::http::header::{ContentType, TryIntoHeaderPair};
 use actix_web::middleware::Compress;
 use base64::{Engine as _, engine::general_purpose};
-use handlebars::Handlebars;
+use tera::{Tera, Context};
 use rand::RngCore;
 use rand::rngs::OsRng;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::env;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -88,18 +87,18 @@ fn csp(nonce: &str) -> impl TryIntoHeaderPair {
 }
 
 #[get("/")]
-async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
-    let mut data = BTreeMap::new();
-    data.insert("action", "About");
-    let index = hb.render("index", &false).unwrap();
-    data.insert("body", &index);
+async fn index(tera: web::Data<Tera>) -> impl Responder {
+    let mut context = Context::new();
+    context.insert("action", "About");
+    let index = tera.render("index.html", &Context::new()).unwrap();
+    context.insert("body", &index);
     let fruit = fruit().to_string();
-    data.insert("fruit", &fruit);
+    context.insert("fruit", &fruit);
     let nonce = nonce();
-    data.insert("nonce", &nonce);
+    context.insert("nonce", &nonce);
     let base = base();
-    data.insert("base", &base);
-    let body = hb.render("base", &data).unwrap();
+    context.insert("base", &base);
+    let body = tera.render("base.html", &context).unwrap();
 
     HttpResponse::Ok()
         .insert_header(pp())
@@ -109,18 +108,18 @@ async fn index(hb: web::Data<Handlebars<'_>>) -> impl Responder {
 }
 
 #[get("/new")]
-async fn new(hb: web::Data<Handlebars<'_>>) -> impl Responder {
-    let mut data = BTreeMap::new();
-    data.insert("action", "New bingo");
-    let new = hb.render("new", &false).unwrap();
-    data.insert("body", &new);
+async fn new(tera: web::Data<Tera>) -> impl Responder {
+    let mut context = Context::new();
+    context.insert("action", "New bingo");
+    let new = tera.render("new.html", &Context::new()).unwrap();
+    context.insert("body", &new);
     let fruit = fruit().to_string();
-    data.insert("fruit", &fruit);
+    context.insert("fruit", &fruit);
     let nonce = nonce();
-    data.insert("nonce", &nonce);
+    context.insert("nonce", &nonce);
     let base = base();
-    data.insert("base", &base);
-    let body = hb.render("base", &data).unwrap();
+    context.insert("base", &base);
+    let body = tera.render("base.html", &context).unwrap();
 
     HttpResponse::Ok()
         .insert_header(pp())
@@ -146,7 +145,7 @@ fn default_ranges(n_ranges: usize) -> Vec<u8> {
 }
 
 #[get("/edit")]
-async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl Responder {
+async fn edit(tera: web::Data<Tera>, bingo: Query<QBingoGrid>) -> impl Responder {
     dbg!(&bingo);
 
     let n_fields = usize::from(bingo.size.pow(2));
@@ -174,23 +173,23 @@ async fn edit(hb: web::Data<Handlebars<'_>>, bingo: Query<QBingoGrid>) -> impl R
 
     let nonce = nonce();
     let base = base();
-    let edit_data = BingoGrid {
+    let edit_context = BingoGrid {
         size: bingo.size,
         fields: fields,
         nonce: nonce.clone(),
         base: base.clone(),
     };
-    let edit = hb.render("edit", &edit_data).unwrap();
+    let edit = tera.render("edit.html", &Context::from_serialize(&edit_context).unwrap()).unwrap();
 
     let fruit = fruit().to_string();
-    let mut base_data = BTreeMap::new();
-    base_data.insert("action", "Edit bingo");
-    base_data.insert("body", &edit);
-    base_data.insert("nonce", &nonce);
-    base_data.insert("base", &base);
+    let mut base_context = Context::new();
+    base_context.insert("action", "Edit bingo");
+    base_context.insert("body", &edit);
+    base_context.insert("nonce", &nonce);
+    base_context.insert("base", &base);
     
-    base_data.insert("fruit", &fruit);
-    let body = hb.render("base", &base_data).unwrap();
+    base_context.insert("fruit", &fruit);
+    let body = tera.render("base.html", &base_context).unwrap();
 
     HttpResponse::Ok()
         .insert_header(pp())
@@ -247,16 +246,13 @@ fn static_dir() -> String {
 async fn main() -> std::io::Result<()> {
     let static_dir = static_dir();
 
-    let mut hbars = Handlebars::new();
-    hbars
-        .register_templates_directory(".html", templ_dir())
-        .unwrap();
-    let hbars_ref = web::Data::new(hbars);
+    let tera = Tera::new(&(templ_dir() + "/*.html")).unwrap();
+    let tera_ref = web::Data::new(tera);
 
     HttpServer::new(move || {
         App::new()
             .wrap(Compress::default())
-            .app_data(hbars_ref.clone())
+            .app_data(tera_ref.clone())
             .service(index)
             .service(new)
             .service(edit)
