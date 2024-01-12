@@ -1,7 +1,7 @@
 use actix_files::Files;
 use actix_web_lab::extract::Query;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
-use actix_web::http::header::{ContentType, TryIntoHeaderPair};
+use actix_web::http::header::{ContentType, TryIntoHeaderPair, HeaderName, HeaderValue, PERMISSIONS_POLICY, CONTENT_SECURITY_POLICY};
 use actix_web::middleware::Compress;
 use base64::{Engine as _, engine::general_purpose};
 use tera::{Tera, Context};
@@ -111,16 +111,14 @@ fn fruit() -> char {
     fruits[random_index]
 }
 
-fn pp() -> impl TryIntoHeaderPair {
-    (
-        "Permissions-Policy",
-        "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), interest-cohort=(), serial=(), sync-script=(), trust-token-redemption=(), unload=(), window-placement=(), vertical-scroll=()",
-    )
-}
+const PP: (HeaderName, HeaderValue) = (
+    PERMISSIONS_POLICY,
+    HeaderValue::from_static("accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), interest-cohort=(), serial=(), sync-script=(), trust-token-redemption=(), unload=(), window-placement=(), vertical-scroll=()"),
+ );
 
 fn csp(nonce: &str) -> impl TryIntoHeaderPair {
     (
-        "Content-Security-Policy",
+        CONTENT_SECURITY_POLICY,
         format!("default-src 'none'; style-src 'self' 'nonce-{}'; img-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors *; sandbox allow-same-origin allow-forms;", nonce),
     )
 }
@@ -140,7 +138,7 @@ async fn index(tera: web::Data<Tera>) -> impl Responder {
     let body = tera.render("base.html", &context).unwrap();
 
     HttpResponse::Ok()
-        .insert_header(pp())
+        .insert_header(PP)
         .insert_header(csp(&nonce))
         .content_type(ContentType::html())
         .body(body)
@@ -161,7 +159,7 @@ async fn new(tera: web::Data<Tera>) -> impl Responder {
     let body = tera.render("base.html", &context).unwrap();
 
     HttpResponse::Ok()
-        .insert_header(pp())
+        .insert_header(PP)
         .insert_header(csp(&nonce))
         .content_type(ContentType::html())
         .body(body)
@@ -201,7 +199,7 @@ async fn edit(tera: web::Data<Tera>, qbingo: Query<QBingoGrid>) -> impl Responde
     let body = tera.render("base.html", &base_context).unwrap();
 
     HttpResponse::Ok()
-        .insert_header(pp())
+        .insert_header(PP)
         .insert_header(csp(&nonce))
         .content_type(ContentType::html())
         .body(body)
