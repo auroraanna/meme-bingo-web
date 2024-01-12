@@ -24,10 +24,51 @@ struct BingoGrid {
     fields: Vec<BingoField>,
 }
 
+impl BingoGrid {
+    fn new_from_size(size: u8) -> Self {
+        assert!(size <= 15);
+
+        let mut fields = Vec::<BingoField>::new();
+        for _ in  0..(size.pow(2)) {
+            fields.push(BingoField {
+                name: String::from(""),
+                range: 0,
+            });
+        }
+
+        BingoGrid { size, fields }
+    }
+
+    fn new_from_fields(fields: Vec<BingoField>) -> Self {
+        let length = fields.len();
+        dbg!(length);
+        assert!(usize::from(15_u8.pow(2)) >= length);
+        let size_float = (length as f32).sqrt();
+        assert!(size_float.floor() == size_float);
+        let size = size_float as u8;
+
+        BingoGrid { size, fields }
+    }
+
+    fn new_from_names_and_ranges(names: Vec<String>, ranges: Vec<u8>) -> Self {
+        assert!(names.len() == ranges.len());
+
+        let mut fields = Vec::<BingoField>::new();
+        for n in 0..names.len() {
+            fields.push(BingoField {
+                name: names[n].clone(),
+                range: ranges[n],
+            });
+        }
+
+        Self::new_from_fields(fields)
+    }
+}
+
 // BingoGrid but works with query parameters
 #[derive(Deserialize, Serialize, Debug, Clone)]
 struct QBingoGrid {
-    size: u8,
+    size: Option<u8>,
     #[serde(rename = "name")]
     names: Option<Vec<String>>,
     #[serde(rename = "range")]
@@ -126,57 +167,27 @@ async fn new(tera: web::Data<Tera>) -> impl Responder {
         .body(body)
 }
 
-fn default_names(n_names: usize) -> Vec<String> {
-    let mut names = Vec::<String>::new();
-    for _n in 0..n_names {
-        names.push(String::from(""))
-    }
-    names
-}
-
-fn default_ranges(n_ranges: usize) -> Vec<u8> {
-    let mut ranges = Vec::<u8>::new();
-    for _n in 0..n_ranges {
-        ranges.push(0)
-    }
-    ranges
-}
-
 #[get("/edit")]
-async fn edit(tera: web::Data<Tera>, bingo: Query<QBingoGrid>) -> impl Responder {
-    dbg!(&bingo);
-
-    let n_fields = usize::from(bingo.size.pow(2));
-    dbg!(&n_fields);
-
-    let names = bingo.names.clone().unwrap_or_else(|| {
-        default_names(n_fields)
-    });
-    dbg!(&names);
-
-    let ranges = bingo.ranges.clone().unwrap_or_else(|| {
-        default_ranges(n_fields)
-    });
-    dbg!(&ranges);
-
-    let mut fields = Vec::<BingoField>::new();
-    for n in 0..n_fields {
-        dbg!(n);
-        fields.push(BingoField {
-            name: names[n].clone(),
-            range: ranges[n],
-        });
-    }
-    dbg!(&fields);
+async fn edit(tera: web::Data<Tera>, qbingo: Query<QBingoGrid>) -> impl Responder {
+    let bingo: BingoGrid = match qbingo.size {
+        Some(v) => BingoGrid::new_from_size(v),
+        None => BingoGrid::new_from_names_and_ranges(
+            match &qbingo.names {
+                Some(v) => v.to_vec(),
+                None => panic!("Missing name query parameters"),
+            },
+            match &qbingo.ranges {
+                Some(v) => v.to_vec(),
+                None => panic!("Missing range query parameters"),
+            }
+        ),
+    };
 
     let nonce = nonce();
     let base = base();
 
     let mut edit_context = Context::new();
-    edit_context.insert("bingo", &BingoGrid {
-        size: bingo.size,
-        fields: fields,
-    });
+    edit_context.insert("bingo", &bingo);
     edit_context.insert("nonce", &nonce);
     edit_context.insert("base", &base);
     let edit = tera.render("edit.html", &edit_context).unwrap();
