@@ -1,0 +1,14 @@
+{
+	"name": "meme-bingo-web",
+	"version": "1.0.1",
+	"repository": "git@codeberg.org:annaaurora/meme-bingo-web.git",
+	"author": "Anna Aurora <anna@annaaurora.eu>",
+	"license": "Unlicense",
+	"devDependencies": {
+		"@playwright/test": "^1.40.1",
+		"@types/node": "^20.11.0"
+	},
+	"scripts": {
+		"test": "yarn playwright test"
+	}
+}
