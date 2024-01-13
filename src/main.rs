@@ -238,6 +238,25 @@ async fn edit(tera: web::Data<Tera>, qbingo: Query<QBingoGrid>) -> impl Responde
         .body(body)
 }
 
+#[get("/samples")]
+async fn samples(tera: web::Data<Tera>) -> impl Responder {
+    let mut context = Context::new();
+    context.insert("action", "Sample bingos");
+    let samples = tera.render("samples.html", &Context::new()).unwrap();
+    context.insert("body", &samples);
+    context.insert("fruit", &fruit().to_string());
+    let nonce = nonce();
+    context.insert("nonce", &nonce);
+    context.insert("base", &base());
+    let body = tera.render("base.html", &context).unwrap();
+
+    HttpResponse::Ok()
+        .insert_header(PP)
+        .insert_header(csp(&nonce))
+        .content_type(ContentType::html())
+        .body(body)
+}
+
 fn port() -> u16 {
     let name = "MEME_BINGO_PORT";
     let port = env::var(name);
@@ -296,6 +315,7 @@ async fn main() -> std::io::Result<()> {
             .service(index)
             .service(new)
             .service(edit)
+            .service(samples)
             .service(Files::new("/", &static_dir))
     })
     .bind(("127.0.0.1", port()))?
