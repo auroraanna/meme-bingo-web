@@ -25,8 +25,10 @@ struct BingoGrid {
 }
 
 impl BingoGrid {
-    fn new_from_size(size: u8) -> Self {
-        assert!(size <= 15);
+    fn new_from_size(size: u8) -> Result<Self, &'static str> {
+        if !(size <= 15) {
+            return Err("Bingo size must not be larger than 15.");
+        }
 
         let mut fields = Vec::<BingoField>::new();
         for _ in  0..(size.pow(2)) {
@@ -36,22 +38,27 @@ impl BingoGrid {
             });
         }
 
-        BingoGrid { size, fields }
+        Ok(BingoGrid { size, fields })
     }
 
-    fn new_from_fields(fields: Vec<BingoField>) -> Self {
+    fn new_from_fields(fields: Vec<BingoField>) -> Result<Self, &'static str> {
         let length = fields.len();
-        dbg!(length);
-        assert!(usize::from(15_u8.pow(2)) >= length);
+        if !(usize::from(15_u8.pow(2)) >= length) {
+            return Err("Length of fields must not exceed 255.");
+        }
         let size_float = (length as f32).sqrt();
-        assert!(size_float.floor() == size_float);
+        if !(size_float.floor() == size_float) {
+            return Err("Taking the square root of the length of fields must yield a whole number.");
+        }
         let size = size_float as u8;
 
-        BingoGrid { size, fields }
+        Ok(BingoGrid { size, fields })
     }
 
-    fn new_from_names_and_ranges(names: Vec<String>, ranges: Vec<u8>) -> Self {
-        assert!(names.len() == ranges.len());
+    fn new_from_names_and_ranges(names: Vec<String>, ranges: Vec<u8>) -> Result<Self, &'static str> {
+        if !(names.len() == ranges.len()) {
+            return Err("names and ranges must be of the same length.");
+        }
 
         let mut fields = Vec::<BingoField>::new();
         for n in 0..names.len() {
@@ -61,7 +68,12 @@ impl BingoGrid {
             });
         }
 
-        Self::new_from_fields(fields)
+        Ok(match Self::new_from_fields(fields) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(e);
+            },
+        })
     }
 }
 
@@ -165,20 +177,41 @@ async fn new(tera: web::Data<Tera>) -> impl Responder {
         .body(body)
 }
 
+// For convenience
+fn bad_request(reason: &'static str) -> HttpResponse {
+    HttpResponse::BadRequest()
+        .reason(&reason)
+        .body(reason.to_string())
+}
+
 #[get("/edit")]
 async fn edit(tera: web::Data<Tera>, qbingo: Query<QBingoGrid>) -> impl Responder {
     let bingo: BingoGrid = match qbingo.size {
-        Some(v) => BingoGrid::new_from_size(v),
-        None => BingoGrid::new_from_names_and_ranges(
+        Some(v) => match BingoGrid::new_from_size(v) {
+            Ok(v) => v,
+            Err(e) => {
+                return bad_request(e);
+            },
+        },
+        None => match BingoGrid::new_from_names_and_ranges(
             match &qbingo.names {
                 Some(v) => v.to_vec(),
-                None => panic!("Missing name query parameters"),
+                None => {
+                    return bad_request("No size or name query parameters.");
+                },
             },
             match &qbingo.ranges {
                 Some(v) => v.to_vec(),
-                None => panic!("Missing range query parameters"),
+                None => {
+                    return bad_request("No size or range query parameters.");
+                },
             }
-        ),
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                return bad_request(e);
+            },
+        },
     };
 
     let nonce = nonce();
