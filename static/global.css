@@ -12,6 +12,13 @@
 
 }
 
+nav {
+	display: flex;
+	column-gap: 1rem;
+	row-gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
 button, input, textarea {
 	min-width: 48px;
 	min-height: 48px;	
