@@ -4,7 +4,7 @@
 	"repository": "git@codeberg.org:annaaurora/meme-bingo-web.git",
 	"author": "Anna Aurora <anna@annaaurora.eu>",
 	"license": "Unlicense",
-	"devDependencies": {
+	"dependencies": {
 		"@playwright/test": "^1.40.1",
 		"@types/node": "^20.11.0"
 	},
