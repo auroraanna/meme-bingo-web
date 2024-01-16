@@ -1,4 +1,3 @@
-// @ts-check
 const { test, expect } = require('@playwright/test');
 
 test('has title', async ({ page }) => {
@@ -12,7 +11,7 @@ test('has title', async ({ page }) => {
 test('heading has ::before that is an emoji', async ({ page }) => {
 	await page.goto('/');
 
-	let before = await page.evaluate('window.getComputedStyle(document.querySelector("h1"), ":before").content');
+	let before: string = await page.evaluate('window.getComputedStyle(document.querySelector("h1"), ":before").content');
 	console.log(before);
 	expect(/\p{Extended_Pictographic}/u.test(before)).toBeTruthy();
 });
@@ -28,7 +27,7 @@ test('submit form to create new bingo', async ({ page }) => {
 
 	await page.locator('input, input[type="number"]').pressSequentially('5');
 	await page.locator('button, input[type="submit"]').press('Enter');
-	let path = await page.evaluate(
+	let path: string = await page.evaluate(
 		'window.location.pathname + window.location.search'
 	);
 	expect(path.startsWith('/edit?size=')).toBeTruthy();
@@ -38,7 +37,7 @@ test('submit form to update bingo address', async ({ page }) => {
 	await page.goto('/edit?size=5');
 
 	await page.locator('button, input[type="submit"]').press('Enter');
-	let path = await page.evaluate(
+	let path: string = await page.evaluate(
 		'window.location.search'
 	);
 	expect(!path.includes('size=')).toBeTruthy();

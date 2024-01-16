@@ -1,8 +1,7 @@
-// @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
-	testDir: './tests-js',
+	testDir: 'tests-js',
 	timeout: 5000,
 	fullyParallel: true,
 	forbidOnly: false,
